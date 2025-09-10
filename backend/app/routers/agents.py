@@ -12,69 +12,81 @@ from ..auth import require_roles
 from ..security import dlp_check, prompt_injection_guard
 from .tools import DB as TOOL_DB
 from jsonschema import validate as jsonschema_validate, ValidationError
+from sqlalchemy.orm import Session
+from ..db import SessionLocal
+from ..models import AgentModel
 
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
-# 简单内存存储占位，后续替换为数据库
-DB: dict[str, Agent] = {}
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @router.get("", response_model=List[Agent])
-def list_agents():
-    return list(DB.values())
+def list_agents(db: Session = Depends(get_db)):
+    rows = db.query(AgentModel).all()
+    return [Agent(id=r.id, name=r.name, description=r.description, system_prompt=r.system_prompt, model=r.model, version=r.version, metadata=r.metadata_json or {}) for r in rows]
 
 
 @router.post("", response_model=Agent, dependencies=[Depends(require_roles("basic"))])
-def create_agent(payload: AgentCreate):
+def create_agent(payload: AgentCreate, db: Session = Depends(get_db)):
     dlp_check(payload.system_prompt)
     prompt_injection_guard(payload.system_prompt)
     agent_id = str(uuid.uuid4())
-    agent = Agent(id=agent_id, **payload.model_dump())
-    DB[agent_id] = agent
-    return agent
+    row = AgentModel(id=agent_id, name=payload.name, description=payload.description, system_prompt=payload.system_prompt, model=payload.model, version=1, metadata_json={})
+    db.add(row)
+    db.commit()
+    return Agent(id=agent_id, **payload.model_dump())
 
 
 @router.get("/{agent_id}", response_model=Agent)
-def get_agent(agent_id: str):
-    agent = DB.get(agent_id)
-    if not agent:
+def get_agent(agent_id: str, db: Session = Depends(get_db)):
+    r = db.get(AgentModel, agent_id)
+    if not r:
         raise HTTPException(status_code=404, detail="Agent not found")
-    return agent
+    return Agent(id=r.id, name=r.name, description=r.description, system_prompt=r.system_prompt, model=r.model, version=r.version, metadata=r.metadata_json or {})
 
 
 @router.put("/{agent_id}", response_model=Agent, dependencies=[Depends(require_roles("basic"))])
-def update_agent(agent_id: str, payload: AgentUpdate):
-    agent = DB.get(agent_id)
-    if not agent:
+def update_agent(agent_id: str, payload: AgentUpdate, db: Session = Depends(get_db)):
+    r = db.get(AgentModel, agent_id)
+    if not r:
         raise HTTPException(status_code=404, detail="Agent not found")
-    data = agent.model_dump()
-    data.update({k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None})
-    updated = Agent(**data)
-    DB[agent_id] = updated
-    return updated
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        if v is None:
+            continue
+        setattr(r, k, v)
+    db.commit()
+    return Agent(id=r.id, name=r.name, description=r.description, system_prompt=r.system_prompt, model=r.model, version=r.version, metadata=r.metadata_json or {})
 
 
 @router.delete("/{agent_id}", dependencies=[Depends(require_roles("basic"))])
-def delete_agent(agent_id: str):
-    if agent_id in DB:
-        del DB[agent_id]
+def delete_agent(agent_id: str, db: Session = Depends(get_db)):
+    r = db.get(AgentModel, agent_id)
+    if not r:
+        return {"deleted": False}
+    db.delete(r)
+    db.commit()
     return {"deleted": True}
 
 
 @router.post("/{agent_id}/tools")
-def bind_tool(agent_id: str, tool_id: str, user=Depends(require_roles("basic"))):
-    agent = DB.get(agent_id)
-    if not agent:
+def bind_tool(agent_id: str, tool_id: str, user=Depends(require_roles("basic")), db: Session = Depends(get_db)):
+    r = db.get(AgentModel, agent_id)
+    if not r:
         raise HTTPException(status_code=404, detail="Agent not found")
-    # 占位：写入 metadata 记录绑定
-    meta = dict(agent.metadata)
+    meta = dict(r.metadata_json or {})
     tools = set(meta.get("tools", []))
     tools.add(tool_id)
     meta["tools"] = list(tools)
-    updated = agent.model_copy(update={"metadata": meta})
-    DB[agent_id] = updated
-    return updated
+    r.metadata_json = meta
+    db.commit()
+    return Agent(id=r.id, name=r.name, description=r.description, system_prompt=r.system_prompt, model=r.model, version=r.version, metadata=meta)
 
 
 async def _run_stream(agent: Agent):

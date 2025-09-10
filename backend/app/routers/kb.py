@@ -3,7 +3,7 @@
 """
 
 import uuid
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from ..services import rag
@@ -53,9 +53,9 @@ def reindex(kid: str):
 class IngestRequest(BaseModel):
     text: str
     chunk_size: int = 500
-    # 多源导入占位参数
-    source: str | None = None  # e.g. notion/confluence/gdrive
-    permission_tag: str | None = None  # 权限标签占位
+    # 多源导入占位参数（Python 3.9 兼容 Optional 写法）
+    source: Optional[str] = None  # e.g. notion/confluence/gdrive
+    permission_tag: Optional[str] = None  # 权限标签占位
 
 
 @router.post("/{kid}/documents/ingest")

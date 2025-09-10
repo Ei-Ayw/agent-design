@@ -16,6 +16,7 @@ from .errors import http_error_handler, validation_error_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
 from .otel import setup_otel
+from .db import init_db
 
 
 def create_app() -> FastAPI:
@@ -60,6 +61,11 @@ def create_app() -> FastAPI:
         return {"name": settings.app_name, "env": settings.environment}
 
     logger.info("FastAPI app initialized: {}", settings.app_name)
+    # 初始化数据库（自动建表）
+    try:
+        init_db()
+    except Exception as e:
+        logger.error("DB init failed: {}", e)
     # OpenTelemetry（可选，设置 OTEL_EXPORTER_OTLP_ENDPOINT 生效）
     try:
         setup_otel(app)

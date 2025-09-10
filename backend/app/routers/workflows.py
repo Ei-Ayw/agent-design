@@ -7,6 +7,7 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from ..services import workflow as wf
 from ..auth import require_abac
+from fastapi import Depends
 
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
@@ -35,7 +36,7 @@ def get_workflow(wid: str):
     return wf
 
 
-@router.post("/{wid}/run", dependencies=[require_abac("workflow", "create")])
+@router.post("/{wid}/run", dependencies=[Depends(require_abac("workflow", "create"))])
 def run_workflow(wid: str):
     if wid not in DB:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -44,7 +45,7 @@ def run_workflow(wid: str):
     return run
 
 
-@router.post("/{wid}/replay", dependencies=[require_abac("workflow", "create")])
+@router.post("/{wid}/replay", dependencies=[Depends(require_abac("workflow", "create"))])
 def replay_workflow(wid: str, run_id: str):
     if wid not in DB:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -70,7 +71,7 @@ def get_workflow_run(run_id: str):
     return run
 
 
-@router.post("/runs/{run_id}/approve", dependencies=[require_abac("workflow", "update")])
+@router.post("/runs/{run_id}/approve", dependencies=[Depends(require_abac("workflow", "update"))])
 def approve_run_node(run_id: str, node_id: str):
     run = wf.get_run(run_id)
     if not run:
