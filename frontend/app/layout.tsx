@@ -6,6 +6,8 @@ import React from 'react'
 import type { Metadata } from 'next'
 import 'antd/dist/reset.css'
 import AppShell from '../components/AppShell'
+import dynamic from 'next/dynamic'
+const CommandPalette = dynamic(() => import('../components/CommandPalette'), { ssr: false })
 
 export const metadata: Metadata = {
   title: 'AI Agent 控制台',
@@ -16,7 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN">
       <body>
-        <AppShell>{children}</AppShell>
+        <AppShell>
+          <CommandPalette />
+          {children}
+        </AppShell>
       </body>
     </html>
   )
