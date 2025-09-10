@@ -1,0 +1,82 @@
+/**
+ * 文件作用：Agents 列表与创建页（直连后端），支持跳转运行页。
+ */
+
+"use client"
+
+import React, { useEffect, useState } from 'react'
+import { Table, Button, Form, Input, Space, message, Card } from 'antd'
+import Link from 'next/link'
+
+type Agent = {
+  id: string
+  name: string
+  description?: string
+  system_prompt?: string
+  model?: string
+}
+
+const API = 'http://localhost:8000'
+
+export default function AgentsPage() {
+  const [data, setData] = useState<Agent[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const fetchAgents = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/agents`)
+      const json = await res.json()
+      setData(json)
+    } catch (e) {
+      message.error('加载失败')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { fetchAgents() }, [])
+
+  const onCreate = async (values: any) => {
+    try {
+      const res = await fetch(`${API}/agents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) })
+      if (!res.ok) throw new Error('bad')
+      message.success('创建成功')
+      fetchAgents()
+    } catch {
+      message.error('创建失败')
+    }
+  }
+
+  return (
+    <main style={{ padding: 24 }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Card title="创建 Agent">
+          <Form layout="vertical" onFinish={onCreate}>
+            <Form.Item name="name" label="名称" rules={[{ required: true }]}><Input placeholder="如：默认助手" /></Form.Item>
+            <Form.Item name="description" label="描述"><Input /></Form.Item>
+            <Form.Item name="system_prompt" label="系统提示"><Input.TextArea rows={3} /></Form.Item>
+            <Form.Item name="model" label="模型"><Input placeholder="deepseek-r1" /></Form.Item>
+            <Button type="primary" htmlType="submit">创建</Button>
+          </Form>
+        </Card>
+        <Card title="Agent 列表">
+          <Table rowKey="id" loading={loading} dataSource={data} pagination={false}
+                 columns={[
+                   { title: 'ID', dataIndex: 'id' },
+                   { title: '名称', dataIndex: 'name' },
+                   { title: '模型', dataIndex: 'model' },
+                   { title: '操作', render: (_, r: Agent) => (
+                     <Space>
+                       <Link href={`/agents/${r.id}/run`}><Button type="link">运行</Button></Link>
+                     </Space>
+                   )}
+                 ]}
+          />
+        </Card>
+      </Space>
+    </main>
+  )
+}
+
+
