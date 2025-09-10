@@ -37,7 +37,9 @@ export default function WorkflowsPage() {
 
   const run = async (wid: string) => {
     const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    const res = await fetch(`${API}/workflows/${wid}/run`, { method: 'POST', headers: t ? { Authorization: `Bearer ${t}` } : {} })
+    const headers: Record<string, string> = {}
+    if (t) headers.Authorization = `Bearer ${t}`
+    const res = await fetch(`${API}/workflows/${wid}/run`, { method: 'POST', headers })
     if (res.ok) { message.success('已触发运行'); showRuns(wid) } else { message.error('触发失败') }
   }
 
@@ -82,7 +84,9 @@ export default function WorkflowsPage() {
                    const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null
                    const node = prompt('输入要审批的节点 ID')
                    if (!node) return
-                   const res = await fetch(`${API}/workflows/runs/${r.id}/approve?node_id=${encodeURIComponent(node)}`, { method: 'POST', headers: t ? { Authorization: `Bearer ${t}` } : {} })
+                   const headers: Record<string, string> = {}
+                   if (t) headers.Authorization = `Bearer ${t}`
+                   const res = await fetch(`${API}/workflows/runs/${r.id}/approve?node_id=${encodeURIComponent(node)}`, { method: 'POST', headers })
                    if (res.ok) { message.success('已审批'); showRuns(current!) } else { message.error('审批失败') }
                  }}>审批节点</Button> }
                ]} />

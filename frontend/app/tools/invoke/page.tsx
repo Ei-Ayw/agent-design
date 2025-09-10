@@ -14,15 +14,19 @@ export default function ToolInvokePage() {
   const [params, setParams] = useState('{}')
   const [out, setOut] = useState('')
 
-  const authHeaders = () => {
+  const authHeaders = (): HeadersInit => {
     const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    return t ? { Authorization: `Bearer ${t}` } : {}
+    const headers: Record<string, string> = {}
+    if (t) headers.Authorization = `Bearer ${t}`
+    return headers
   }
 
   const invoke = async () => {
     try {
       const body = JSON.parse(params)
-      const res = await fetch(`${API}/tools/${encodeURIComponent(toolId)}/invoke`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(body) })
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      Object.assign(headers, authHeaders() as Record<string, string>)
+      const res = await fetch(`${API}/tools/${encodeURIComponent(toolId)}/invoke`, { method: 'POST', headers, body: JSON.stringify(body) })
       const json = await res.json()
       if (!res.ok) throw new Error(json.detail || '调用失败')
       setOut(JSON.stringify(json, null, 2))

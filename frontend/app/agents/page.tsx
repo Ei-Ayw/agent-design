@@ -22,15 +22,17 @@ export default function AgentsPage() {
   const [data, setData] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
 
-  const authHeaders = () => {
+  const authHeaders = (): HeadersInit => {
     const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    return t ? { Authorization: `Bearer ${t}` } : {}
+    const headers: Record<string, string> = {}
+    if (t) headers.Authorization = `Bearer ${t}`
+    return headers
   }
 
   const fetchAgents = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${API}/agents`, { headers: { ...authHeaders() } })
+      const res = await fetch(`${API}/agents`, { headers: authHeaders() })
       const json = await res.json()
       setData(json)
     } catch (e) {
@@ -44,7 +46,9 @@ export default function AgentsPage() {
 
   const onCreate = async (values: any) => {
     try {
-      const res = await fetch(`${API}/agents`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(values) })
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      Object.assign(headers, authHeaders() as Record<string, string>)
+      const res = await fetch(`${API}/agents`, { method: 'POST', headers, body: JSON.stringify(values) })
       if (!res.ok) throw new Error('bad')
       message.success('创建成功')
       fetchAgents()
@@ -56,7 +60,7 @@ export default function AgentsPage() {
   const bindTool = async (agentId: string) => {
     const toolId = prompt('输入要绑定的 Tool ID')
     if (!toolId) return
-    const res = await fetch(`${API}/agents/${agentId}/tools?tool_id=${encodeURIComponent(toolId)}`, { method: 'POST', headers: { ...authHeaders() } })
+    const res = await fetch(`${API}/agents/${agentId}/tools?tool_id=${encodeURIComponent(toolId)}`, { method: 'POST', headers: authHeaders() })
     if (res.ok) { message.success('已绑定'); fetchAgents() } else { message.error('绑定失败') }
   }
 
