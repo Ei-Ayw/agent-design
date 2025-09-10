@@ -22,10 +22,15 @@ export default function AgentsPage() {
   const [data, setData] = useState<Agent[]>([])
   const [loading, setLoading] = useState(false)
 
+  const authHeaders = () => {
+    const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    return t ? { Authorization: `Bearer ${t}` } : {}
+  }
+
   const fetchAgents = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${API}/agents`)
+      const res = await fetch(`${API}/agents`, { headers: { ...authHeaders() } })
       const json = await res.json()
       setData(json)
     } catch (e) {
@@ -39,13 +44,20 @@ export default function AgentsPage() {
 
   const onCreate = async (values: any) => {
     try {
-      const res = await fetch(`${API}/agents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) })
+      const res = await fetch(`${API}/agents`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(values) })
       if (!res.ok) throw new Error('bad')
       message.success('创建成功')
       fetchAgents()
     } catch {
       message.error('创建失败')
     }
+  }
+
+  const bindTool = async (agentId: string) => {
+    const toolId = prompt('输入要绑定的 Tool ID')
+    if (!toolId) return
+    const res = await fetch(`${API}/agents/${agentId}/tools?tool_id=${encodeURIComponent(toolId)}`, { method: 'POST', headers: { ...authHeaders() } })
+    if (res.ok) { message.success('已绑定'); fetchAgents() } else { message.error('绑定失败') }
   }
 
   return (
@@ -69,6 +81,7 @@ export default function AgentsPage() {
                    { title: '操作', render: (_, r: Agent) => (
                      <Space>
                        <Link href={`/agents/${r.id}/run`}><Button type="link">运行</Button></Link>
+                       <Button onClick={() => bindTool(r.id)}>绑定工具</Button>
                      </Space>
                    )}
                  ]}

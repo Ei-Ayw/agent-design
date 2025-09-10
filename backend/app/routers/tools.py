@@ -6,6 +6,7 @@ import uuid
 from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from ..schemas.tool import Tool, ToolCreate, ToolUpdate
+from jsonschema import validate as jsonschema_validate, ValidationError
 
 
 router = APIRouter(prefix="/tools", tags=["tools"])
@@ -63,6 +64,10 @@ def invoke_tool(tool_id: str, args: Dict[str, Any]):
     tool = DB.get(tool_id)
     if not tool:
         raise HTTPException(status_code=404, detail="Tool not found")
+    try:
+        jsonschema_validate(instance=args, schema=tool.schema or {"type": "object"})
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Schema validation failed: {e.message}")
     return {"tool": tool_id, "args": args, "result": "placeholder"}
 
 

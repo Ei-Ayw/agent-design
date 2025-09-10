@@ -36,7 +36,8 @@ export default function WorkflowsPage() {
   }
 
   const run = async (wid: string) => {
-    const res = await fetch(`${API}/workflows/${wid}/run`, { method: 'POST' })
+    const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const res = await fetch(`${API}/workflows/${wid}/run`, { method: 'POST', headers: t ? { Authorization: `Bearer ${t}` } : {} })
     if (res.ok) { message.success('已触发运行'); showRuns(wid) } else { message.error('触发失败') }
   }
 
@@ -74,7 +75,17 @@ export default function WorkflowsPage() {
 
       <Modal title={`运行历史 ${current || ''}`} open={visible} onCancel={() => setVisible(false)} footer={null} width={800}>
         <Table rowKey="id" dataSource={runs} pagination={false}
-               columns={[{ title: 'Run ID', dataIndex: 'id' }, { title: '状态', dataIndex: 'status' }]} />
+               columns={[
+                 { title: 'Run ID', dataIndex: 'id' },
+                 { title: '状态', dataIndex: 'status' },
+                 { title: '操作', render: (_, r: Run) => <Button onClick={async () => {
+                   const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+                   const node = prompt('输入要审批的节点 ID')
+                   if (!node) return
+                   const res = await fetch(`${API}/workflows/runs/${r.id}/approve?node_id=${encodeURIComponent(node)}`, { method: 'POST', headers: t ? { Authorization: `Bearer ${t}` } : {} })
+                   if (res.ok) { message.success('已审批'); showRuns(current!) } else { message.error('审批失败') }
+                 }}>审批节点</Button> }
+               ]} />
       </Modal>
     </main>
   )

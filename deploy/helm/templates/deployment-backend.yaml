@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-backend
+  template:
+    metadata:
+      labels:
+        app: agent-backend
+    spec:
+      containers:
+        - name: backend
+          image: {{ .Values.image.backend }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.service.backendPort }}
+          env:
+            - name: ENVIRONMENT
+              value: "prod"
+            - name: TENCENTCLOUD_REGION
+              value: "ap-guangzhou"
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.service.backendPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.service.backendPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+

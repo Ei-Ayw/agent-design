@@ -71,3 +71,13 @@ def ingest_text(kid: str, body: IngestRequest):
     return {"kb": kid, "chunks": len(chunks), "preview": compact[:200], "source": body.source, "permission_tag": body.permission_tag}
 
 
+@router.get("/{kid}/search")
+def kb_search(kid: str, q: str):
+    if kid not in DB:
+        raise HTTPException(status_code=404, detail="KB not found")
+    # 混检占位
+    items = rag.hybrid_retrieve(q)
+    reranked = rag.rerank(items)
+    return {"kb": kid, "query": q, "items": reranked}
+
+

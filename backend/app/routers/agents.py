@@ -10,6 +10,8 @@ from fastapi.responses import StreamingResponse
 from ..schemas.agent import Agent, AgentCreate, AgentUpdate
 from ..auth import require_roles
 from ..security import dlp_check, prompt_injection_guard
+from .tools import DB as TOOL_DB
+from jsonschema import validate as jsonschema_validate, ValidationError
 
 
 router = APIRouter(prefix="/agents", tags=["agents"])
@@ -76,9 +78,24 @@ def bind_tool(agent_id: str, tool_id: str, user=Depends(require_roles("basic")))
 
 
 async def _run_stream(agent: Agent):
-    for i in range(3):
-        yield f"data: {{\"agent_id\": \"{agent.id}\", \"delta\": \"step {i+1}\"}}\n\n"
-        await asyncio.sleep(0.4)
+    tools = list(agent.metadata.get("tools", []))
+    if not tools:
+        for i in range(3):
+            yield f"data: {{\"agent_id\": \"{agent.id}\", \"delta\": \"step {i+1}\"}}\n\n"
+            await asyncio.sleep(0.4)
+        return
+    for tid in tools:
+        tool = TOOL_DB.get(tid)
+        if not tool:
+            yield f"data: {{\"warning\": \"tool {tid} not found\"}}\n\n"
+            continue
+        args = {}
+        try:
+            jsonschema_validate(instance=args, schema=tool.schema or {"type": "object"})
+            yield f"data: {{\"tool\": \"{tool.name}\", \"status\": \"validated\"}}\n\n"
+        except ValidationError as e:
+            yield f"data: {{\"tool\": \"{tool.name}\", \"error\": \"{e.message}\"}}\n\n"
+        await asyncio.sleep(0.3)
 
 
 @router.get("/{agent_id}/run")

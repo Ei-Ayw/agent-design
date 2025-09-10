@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .errors import http_error_handler, validation_error_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
+from .otel import setup_otel
 
 
 def create_app() -> FastAPI:
@@ -59,6 +60,11 @@ def create_app() -> FastAPI:
         return {"name": settings.app_name, "env": settings.environment}
 
     logger.info("FastAPI app initialized: {}", settings.app_name)
+    # OpenTelemetry（可选，设置 OTEL_EXPORTER_OTLP_ENDPOINT 生效）
+    try:
+        setup_otel(app)
+    except Exception:
+        logger.warning("OTel not initialized")
     return app
 
 

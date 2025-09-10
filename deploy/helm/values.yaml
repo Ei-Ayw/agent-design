@@ -1,0 +1,18 @@
+image:
+  backend: your-registry/agent-backend:latest
+  frontend: your-registry/agent-frontend:latest
+
+service:
+  type: ClusterIP
+  backendPort: 8000
+  frontendPort: 3000
+
+ingress:
+  enabled: false
+  className: nginx
+  hosts:
+    - host: agent.local
+      paths:
+        - path: /
+          pathType: Prefix
+

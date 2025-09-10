@@ -4,13 +4,29 @@
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
+from datetime import datetime
+
+
+class Attachment(BaseModel):
+    id: str
+    type: str
+    url: Optional[str] = None
+    meta: Dict[str, Any] = {}
+
+
+class FunctionCall(BaseModel):
+    name: str
+    arguments: Dict[str, Any] = {}
+    result: Optional[Dict[str, Any]] = None
 
 
 class Message(BaseModel):
     id: str
-    role: str = Field(pattern=r"^(user|assistant|system)$")
-    content: str
-    tool_call: Optional[Dict[str, Any]] = None
+    role: str = Field(pattern=r"^(user|assistant|system|tool)$")
+    content: str = ""
+    function_call: Optional[FunctionCall] = None
+    attachments: List[Attachment] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Conversation(BaseModel):
