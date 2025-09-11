@@ -1,0 +1,93 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // 设计系统颜色
+        'bg-1': 'var(--color-bg-1)',
+        'bg-2': 'var(--color-bg-2)',
+        'bg-3': 'var(--color-bg-3)',
+        'bg-4': 'var(--color-bg-4)',
+        'text-1': 'var(--color-text-1)',
+        'text-2': 'var(--color-text-2)',
+        'text-3': 'var(--color-text-3)',
+        'text-4': 'var(--color-text-4)',
+        'border-1': 'var(--color-border-1)',
+        'border-2': 'var(--color-border-2)',
+        'primary': {
+          50: 'var(--color-primary-50)',
+          100: 'var(--color-primary-100)',
+          200: 'var(--color-primary-200)',
+          300: 'var(--color-primary-300)',
+          400: 'var(--color-primary-400)',
+          500: 'var(--color-primary-500)',
+          600: 'var(--color-primary-600)',
+          700: 'var(--color-primary-700)',
+          800: 'var(--color-primary-800)',
+          900: 'var(--color-primary-900)',
+        },
+        'semantic': {
+          success: 'var(--color-semantic-success)',
+          warning: 'var(--color-semantic-warning)',
+          error: 'var(--color-semantic-error)',
+          info: 'var(--color-semantic-info)',
+        },
+      },
+      fontFamily: {
+        sans: ['var(--font-family-sans)'],
+        mono: ['var(--font-family-mono)'],
+      },
+      fontSize: {
+        xs: ['var(--font-size-xs)', { lineHeight: 'var(--line-height-tight)' }],
+        sm: ['var(--font-size-sm)', { lineHeight: 'var(--line-height-normal)' }],
+        base: ['var(--font-size-base)', { lineHeight: 'var(--line-height-normal)' }],
+        lg: ['var(--font-size-lg)', { lineHeight: 'var(--line-height-normal)' }],
+        xl: ['var(--font-size-xl)', { lineHeight: 'var(--line-height-normal)' }],
+        '2xl': ['var(--font-size-2xl)', { lineHeight: 'var(--line-height-tight)' }],
+        '3xl': ['var(--font-size-3xl)', { lineHeight: 'var(--line-height-tight)' }],
+        '4xl': ['var(--font-size-4xl)', { lineHeight: 'var(--line-height-tight)' }],
+      },
+      spacing: {
+        xs: 'var(--spacing-xs)',
+        sm: 'var(--spacing-sm)',
+        md: 'var(--spacing-md)',
+        lg: 'var(--spacing-lg)',
+        xl: 'var(--spacing-xl)',
+        '2xl': 'var(--spacing-2xl)',
+        '3xl': 'var(--spacing-3xl)',
+      },
+      borderRadius: {
+        none: 'var(--border-radius-none)',
+        sm: 'var(--border-radius-sm)',
+        md: 'var(--border-radius-md)',
+        lg: 'var(--border-radius-lg)',
+        xl: 'var(--border-radius-xl)',
+        full: 'var(--border-radius-full)',
+      },
+      boxShadow: {
+        sm: 'var(--color-shadow-1)',
+        md: 'var(--color-shadow-2)',
+        lg: 'var(--color-shadow-3)',
+      },
+      transitionDuration: {
+        fast: '150ms',
+        normal: '200ms',
+        slow: '300ms',
+      },
+      zIndex: {
+        dropdown: 'var(--z-dropdown)',
+        sticky: 'var(--z-sticky)',
+        fixed: 'var(--z-fixed)',
+        modal: 'var(--z-modal)',
+        popover: 'var(--z-popover)',
+        tooltip: 'var(--z-tooltip)',
+      },
+    },
+  },
+  plugins: [],
+}
