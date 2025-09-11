@@ -226,7 +226,7 @@ export function InlineLoading({
 
 // 状态指示器
 export interface StatusIndicatorProps {
-  status: 'success' | 'warning' | 'error' | 'info' | 'pending'
+  status: 'success' | 'warning' | 'error' | 'info' | 'pending' | 'processing' | 'default'
   text?: string
   size?: 'sm' | 'md' | 'lg'
   className?: string
@@ -244,9 +244,11 @@ export function StatusIndicator({
     error: { color: 'var(--color-semantic-error)', icon: '●' },
     info: { color: 'var(--color-semantic-info)', icon: '●' },
     pending: { color: 'var(--color-text-3)', icon: '●' },
+    processing: { color: 'var(--color-primary-500)', icon: '●' },
+    default: { color: 'var(--color-text-3)', icon: '●' },
   }
 
-  const config = statusConfig[status]
+  const config = statusConfig[status] || statusConfig.default
   const sizeClasses = {
     sm: 'w-2 h-2 text-xs',
     md: 'w-3 h-3 text-sm',
