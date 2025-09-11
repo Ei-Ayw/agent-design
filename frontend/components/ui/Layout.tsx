@@ -206,7 +206,7 @@ export function PageLayout({
       </div>
       
       <div className="flex-1 overflow-auto">
-        <div className="w-full px-4 sm:px-6 lg:px-8 pb-4">
+        <div className="w-full px-4 sm:px-6 lg:px-8 pb-2">
           {children}
         </div>
       </div>

@@ -67,27 +67,21 @@ export default function HomePage() {
       title: '请求数',
       value: formatNumber(12345, { compact: true }),
       change: { value: 12.5, type: 'increase' as const },
-      chartData: performanceData,
-      chartType: 'area' as const,
     },
     {
       title: '成功率',
       value: '97.6%',
       change: { value: 2.1, type: 'increase' as const },
-      chartData: performanceData.map(d => ({ ...d, value: Math.random() * 5 + 95 })),
-      chartType: 'line' as const,
     },
     {
       title: 'P95 延迟',
       value: formatTime(1240),
       change: { value: 5.2, type: 'decrease' as const },
-      // 移除图表，只显示数值
     },
     {
       title: '本月成本',
       value: '$123.45',
       change: { value: 8.3, type: 'increase' as const },
-      // 移除图表，只显示数值
     }
   ]
 
@@ -104,28 +98,57 @@ export default function HomePage() {
 
   return (
     <PageLayout>
-      <div className="space-y-1">
+      <div className="space-y-1 h-full flex flex-col">
         {/* 顶部区域：统计卡片 + 图表 */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-1">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-1 flex-shrink-0">
           {/* 左侧：统计卡片 */}
           <div className="lg:col-span-1">
-            <div className="grid grid-cols-2 gap-1">
-              {stats.map((stat, index) => (
-                <StatChart
-                  key={index}
-                  title={stat.title}
-                  value={stat.value}
-                  change={stat.change}
-                  chartData={stat.chartData}
-                  chartType={stat.chartType}
-                />
-              ))}
-            </div>
+            <Card className="h-full">
+              <CardHeader title="关键指标" />
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {stats.map((stat, index) => (
+                    <div key={index} className="p-2 border border-[var(--color-border-1)] rounded">
+                      <div className="text-center">
+                        <Text size="sm" type="tertiary" className="block mb-1">
+                          {stat.title}
+                        </Text>
+                        <div className="flex items-center justify-center space-x-1">
+                          <Text size="lg" type="primary" weight="bold">
+                            {stat.value}
+                          </Text>
+                          {stat.change && (
+                            <>
+                              <span style={{ 
+                                color: stat.change.type === 'increase' ? 'var(--color-semantic-success)' : 
+                                       stat.change.type === 'decrease' ? 'var(--color-semantic-error)' : 
+                                       'var(--color-text-3)' 
+                              }}>
+                                {stat.change.type === 'increase' ? '↗' : 
+                                 stat.change.type === 'decrease' ? '↘' : '→'}
+                              </span>
+                              <span style={{ 
+                                color: stat.change.type === 'increase' ? 'var(--color-semantic-success)' : 
+                                       stat.change.type === 'decrease' ? 'var(--color-semantic-error)' : 
+                                       'var(--color-text-3)',
+                                fontSize: '14px'
+                              }}>
+                                {Math.abs(stat.change.value)}%
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* 右侧：图表区域 */}
           <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
               <Card>
                 <CardHeader
                   title="性能趋势"
@@ -145,7 +168,7 @@ export default function HomePage() {
                 <CardContent>
                   <AreaChartComponent
                     data={performanceData}
-                    height={100}
+                    height={200}
                     areas={[
                       { dataKey: 'value', name: '总请求', color: 'var(--color-primary-500)', fillOpacity: 0.1 },
                       { dataKey: 'success', name: '成功请求', color: 'var(--color-semantic-success)', fillOpacity: 0.1 },
@@ -159,7 +182,7 @@ export default function HomePage() {
                 <CardContent>
                   <LineChartComponent
                     data={errorTrendData}
-                    height={100}
+                    height={200}
                     lines={[
                       { dataKey: 'errors', name: '错误数', color: 'var(--color-semantic-error)', strokeWidth: 2 },
                       { dataKey: 'warnings', name: '警告数', color: 'var(--color-semantic-warning)', strokeWidth: 2 },
@@ -172,7 +195,7 @@ export default function HomePage() {
         </div>
 
         {/* 中间区域：Agent性能 + 快速操作 + 系统状态 */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-1">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-1 flex-shrink-0">
           <Card>
             <CardHeader title="Agent 性能" />
             <CardContent>
@@ -313,44 +336,46 @@ export default function HomePage() {
 
 
         {/* 底部区域：最近运行 + 告警 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
-          <div className="lg:col-span-2">
-            <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 flex-1 min-h-0">
+          <div className="lg:col-span-2 flex flex-col min-h-0">
+            <Card className="flex flex-col h-full min-h-0">
               <CardHeader title="最近运行" />
-              <CardContent>
-                <Table
-                  rowKey="id"
-                  size="small"
-                  dataSource={recent}
-                  pagination={false}
-                  scroll={{ y: 80 }}
-                  columns={[
-                    { title: '类型', dataIndex: 'type', width: 50 },
-                    { title: '名称', dataIndex: 'name', width: 80 },
-                    { 
-                      title: '状态', 
-                      dataIndex: 'status', 
-                      width: 50,
-                      render: (status: string) => (
-                        <StatusIndicator 
-                          status={status === 'ok' ? 'success' : status === 'pending' ? 'warning' : 'error'}
-                          text={status}
-                        />
-                      )
-                    },
-                    { title: '耗时', dataIndex: 'latency', width: 50 },
-                    { title: '时间', dataIndex: 'ts', width: 100 }
-                  ]}
-                />
+              <CardContent className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 min-h-0">
+                  <Table
+                    rowKey="id"
+                    size="small"
+                    dataSource={recent}
+                    pagination={false}
+                    scroll={{ y: 150 }}
+              columns={[
+                      { title: '类型', dataIndex: 'type', width: 50 },
+                      { title: '名称', dataIndex: 'name', width: 80 },
+                      { 
+                        title: '状态', 
+                        dataIndex: 'status', 
+                        width: 50,
+                        render: (status: string) => (
+                          <StatusIndicator 
+                            status={status === 'ok' ? 'success' : status === 'pending' ? 'warning' : 'error'}
+                            text={status}
+                          />
+                        )
+                      },
+                      { title: '耗时', dataIndex: 'latency', width: 50 },
+                      { title: '时间', dataIndex: 'ts', width: 100 }
+                    ]}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          <div>
-            <Card>
+          <div className="flex flex-col min-h-0">
+            <Card className="flex flex-col h-full min-h-0">
               <CardHeader title="告警/拦截" />
-              <CardContent>
-                <div className="space-y-1">
+              <CardContent className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 space-y-1 overflow-y-auto">
                   {alerts.map((alert, index) => (
                     <div key={index} className="flex items-start space-x-1">
                       <StatusIndicator status={alert.status as any} />
